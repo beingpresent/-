@@ -1,0 +1,82 @@
+Часть 2. ER диаграмма.
+Код для dbdiagram.io
+Table Cinema {
+  cinema_id int [pk]
+  name varchar(100)
+  address varchar(255)
+  latitude decimal(9,6)
+  longitude decimal(9,6)
+}
+
+Table Hall_Type {
+  hall_type_id int [pk]
+  type_name varchar(50)
+  description text
+}
+
+Table Hall {
+  hall_id int [pk]
+  cinema_id int 
+  hall_type_id int 
+  name varchar(50)
+  rows_count int
+  seats_per_row int
+}
+
+Table Seat {
+  seat_id int [pk]
+  hall_id int 
+  row_number int
+  seat_number int
+}
+
+Table Movie {
+  movie_id int [pk]
+  title varchar(150)
+  duration_min int
+  age_rating varchar(10)
+  description text
+  release_year int
+  country varchar(50)
+}
+
+Table Genre {
+  genre_id int [pk]
+  name varchar(50)
+}
+
+Table Movie_Genre {
+  movie_id int 
+  genre_id int 
+
+  indexes {
+    (movie_id, genre_id) [pk]
+  }
+}
+
+Table Pricing {
+  price_id int [pk]
+  hall_type_id int [ref: > Hall_Type.hall_type_id]
+  is_3d boolean
+  time_period varchar(20)  // morning, day, evening, night
+  price decimal(6,2)
+}
+
+Table Showtime {
+  showtime_id int [pk]
+  hall_id int 
+  movie_id int 
+  price_id int 
+  start_time datetime
+  end_time datetime
+  is_3d boolean
+}
+
+Ref: Cinema.cinema_id < Hall.cinema_id
+Ref: Hall_Type.hall_type_id < Hall.hall_type_id
+Ref: Hall.hall_id < Seat.hall_id
+Ref: Hall.hall_id < Showtime.hall_id
+Ref: Movie.movie_id < Showtime.movie_id
+Ref: Pricing.price_id < Showtime.price_id
+Ref: Movie.movie_id < Movie_Genre.movie_id
+Ref: Genre.genre_id < Movie_Genre.genre_id
