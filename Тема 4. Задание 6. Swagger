@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Cinema  API
+  version: 1.0.0
+  description: REST API для сайта сети кинотеатров
+servers:
+  - url: https://api.cinema.local/v1
+
+paths:
+  /movies:
+    get:
+      summary: Получить список фильмов
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+        '500':
+          description: Ошибка сервера
+
+  /movies/{id}:
+    get:
+      summary: Получить детальную информацию о фильме
+      parameters:
+        - in: path
+          name: id
+          schema: { type: integer }
+          required: true
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieDetails'
+        '404':
+          description: Фильм не найден
+
+  /favorites:
+    get:
+      summary: Получить список избранных фильмов пользователя
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Список избранных фильмов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+        '401':
+          description: Пользователь не авторизован
+
+  /favorites/{movie_id}:
+    put:
+      summary: Добавить фильм в избранное
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: movie_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '201':
+          description: Фильм добавлен
+        '401':
+          description: Не авторизован
+        '409':
+          description: Фильм уже добавлен в избранное
+        '500':
+          description: Ошибка сервера
+    delete:
+      summary: Удалить фильм из избранного
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: movie_id
+          schema: { type: integer }
+          required: true
+      responses:
+        '204':
+          description: Успешно удалён
+        '401':
+          description: Не авторизован
+        '404':
+          description: Фильм не найден в избранном
+        '500':
+          description: Ошибка сервера
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        duration_min: { type: integer }
+        age_rating: { type: string }
+    MovieDetails:
+      allOf:
+        - $ref: '#/components/schemas/Movie'
+        - type: object
+          properties:
+            description: { type: string }
+            genres:
+              type: array
+              items: { type: string }
+            release_year: { type: integer }
+            country: { type: string }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
