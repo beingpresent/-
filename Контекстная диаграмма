@@ -1,0 +1,27 @@
+' C4-PlantUML context diagram
+@startuml C4_Context
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Context.puml
+LAYOUT_WITH_LEGEND()
+
+Person(user, "Пользователь", "Гость или зарегистрированный пользователь сайта сети кинотеатров")
+Person(cinemaAdmin, "Сотрудник кинотеатра", "Админ/оператор, управляет расписанием и залами (в админ-панели)")
+
+System_Boundary(cinemaSystem, "Сайт сети кинотеатров") {
+    System(webApp, "Веб-приложение (Frontend)", "Каталог фильмов, детали, избранное, расписание, рассадка")
+    System(api, "Backend API", "REST API / GraphQL — обслуживает веб-приложение и внешние интеграции")
+    SystemDb(db, "База данных", "Реляционная БД — хранилище фильмов, залов, сеансов, избранного, тарифов")
+}
+
+System_Ext(paymentGateway, "Платёжный шлюз (внешний)", "Обработка оплат (чёрный ящик)")
+System_Ext(cinemaKiosk, "Пункт продаж в кинотеатре", "Локальная касса/терминал (интеграция с API)")
+
+' Взаимодействия
+Rel(user, webApp, "Использует (браузер/моб. сайт)")
+Rel(webApp, api, "Запрашивает/отправляет данные (REST/HTTPS)")
+Rel(api, db, "Читает/пишет данные (SQL)")
+Rel(cinemaAdmin, api, "Управляет расписанием и залами через админ-интерфейс")
+Rel(api, paymentGateway, "Инициирует платежи (через внешний сервис)")
+Rel(cinemaKiosk, api, "Синхронизирует данные о фильмах и расписании (опционально)")
+
+@enduml
