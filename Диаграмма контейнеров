@@ -1,0 +1,39 @@
+' C4-PlantUML container diagram
+@startuml C4_Containers
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Person(user, "Пользователь", "Браузер или мобильное приложение")
+Person(cinemaAdmin, "Сотрудник кинотеатра", "Админ/оператор")
+
+System_Boundary(cinemaSystem, "Сайт сети кинотеатров") {
+  Container(webApp, "Web", "Интерфейс пользователя. Каталог, детали фильма, избранное, расписание, рассадка")
+  Container(api, "Backend API", "REST API (JSON). Бизнес-логика, авторизация, валидация")
+  ContainerDb(database, "Relational DB", "Postgres / MySQL")
+  Container(adminApp, "Admin UI", "Управление залами, сеансами, тарифами (только для сотрудников)")
+  Container(cache, "Кэш (каталог, расписание, популярные запросы)")
+  Container(messageBus, "Очереди", "RabbitMQ / Kafka", "Асинхронные задачи, интеграции, события (оплат, обновление расписания)")
+  Container(fileStorage, "Хранилище файлов", "Постеры, изображения, медиоматериалы")
+}
+
+System_Ext(paymentGateway, "Платёжный шлюз")
+System_Ext(posSystem, "Кассы", "Локальные кассы — синхронизация")
+
+' Взаимодействия
+Rel(user, webApp, "Использует (HTTPS)")
+Rel(webApp, api, "REST/HTTPS (JSON)")
+Rel(api, database, "SQL: чтение/запись")
+Rel(api, cache, "GET/SET: кеширование каталога и расписаний")
+Rel(api, fileStorage, "GET/PUT: постеры, медиа")
+Rel(api, messageBus, "Публикация событий ")
+Rel(adminApp, api, "Админ-запросы (авторизованные)")
+Rel(api, paymentGateway, "Инициирует платежи (создаёт сессию платежа) — HTTPS")
+Rel(posSystem, api, "Синхронизирует расписание/фильмы")
+Rel(messageBus, api, "Подписка/публикация (обработка фоновых задач)")
+
+' Нефункциональные примечания
+AddElementTag(api, "stat", "API")
+AddElementTag(database, "data", "DB")
+
+@enduml
