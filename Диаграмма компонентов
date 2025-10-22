@@ -1,0 +1,43 @@
+' C4-PlantUML component diagram (Backend API components)
+@startuml C4_Components_Backend
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Container(api, "Backend API", "REST API")
+
+System_Boundary(apiBoundary, "Backend API") {
+  Component(apiGateway, "API Controller / Router",  "Экспонирует REST эндпоинты")
+  Component(authService, "Auth Service", "JWT / OAuth2", "Аутентификация и авторизация")
+  Component(movieService, "Movie Service", "Domain Service", "CRUD и бизнес-логика для фильмов / жанров")
+  Component(showtimeService, "Showtime Service", "Domain Service", "Управление сеансами, форматами (3D), ценообразование")
+  Component(pricingService, "Pricing Service", "Domain Service", "Логика расчёта цены")
+  Component(favoritesService, "Favorites Service", "Domain Service", "Управление избранным (user -> movie)")
+  Component(storageService, "Media/File Service", "Загрузка/доступ к постерам")
+  Component(notificationService, "Notification Service", "Email/Push", "Уведомления (опционально)")
+  Component(integrationService, "Integration Service", "Adapters", "Интеграция с Payment Gateway(черный ящик)")
+  Component(dbRepo, "Repositories", "JPA / TypeORM / Knex", "Доступ к таблицам БД")
+  Component(cacheAdapter, "Cache Adapter", "Кеширование")
+  Component(eventPublisher, "Event Publisher", "Rabbit/Kafka client", "Публикация/подписка событий")
+}
+
+' Взаимодействия внутри backend
+Rel(apiGateway, authService, "Валидирует токены (JWT)")
+Rel(apiGateway, movieService, "GET/POST/PUT/DELETE")
+Rel(apiGateway, showtimeService, "GET/POST/PUT/DELETE")
+Rel(apiGateway, favoritesService, "POST/DELETE/GET")
+Rel(movieService, dbRepo, "CRUD фильмов/жанров")
+Rel(showtimeService, dbRepo, "CRUD сеансов/залов/мест")
+Rel(pricingService, dbRepo, "CRUD тарифов")
+Rel(pricingService, cacheAdapter, "Кеширует расчётные таблицы")
+Rel(favoritesService, dbRepo, "CRUD избранного")
+Rel(integrationService, eventPublisher, "Публикует события и отправляет запросы")
+Rel(integrationService, storageService, "Сохраняет/читает медиа")
+Rel(integrationService, authService, "Использует для защищённых вызовов")
+Rel(eventPublisher, cacheAdapter, "Триггер на инвалидацию кэша (на события)")
+
+' Внешние интеграции
+System_Ext(paymentGateway, "Платёжный шлюз", "Stripe/Acquiring Bank")
+Rel(integrationService, paymentGateway, "HTTPS: инициация платежа, верификация")
+
+@enduml
